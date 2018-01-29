@@ -1,14 +1,15 @@
 from __future__ import print_function
 import math
 from CYLGame import GameLanguage
-from CYLGame import Game
+from CYLGame import GridGame
 from CYLGame import MessagePanel
 from CYLGame import MapPanel
 from CYLGame import StatusPanel
 from CYLGame import PanelBorder
+from CYLGame.Player import DefaultGridPlayer
 
 
-class AppleFinder(Game):
+class AppleFinder(GridGame):
     MAP_WIDTH = 60
     MAP_HEIGHT = 25
     SCREEN_WIDTH = 60
@@ -53,17 +54,20 @@ class AppleFinder(Game):
         self.msg_panel.add("Welcome to "+self.GAME_TITLE+"!!!")
         self.msg_panel.add("Try to eat as many apples as possible")
 
-        self.__create_map()
-
-    def __create_map(self):
+    def init_board(self):
         self.map = MapPanel(0, 0, self.MAP_WIDTH, self.MAP_HEIGHT+1, self.EMPTY,
                             border=PanelBorder.create(bottom="-"))
         self.panels += [self.map]
 
-        self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
-
         self.place_apples(self.NUM_OF_APPLES)
         self.place_pits(self.NUM_OF_PITS_START)
+
+    def create_new_player(self, prog):
+        self.player = DefaultGridPlayer(prog, self.get_move_consts())
+        self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
+
+        self.update_vars_for_player()
+        return self.player
 
     def place_apples(self, count):
         self.place_objects(self.APPLE, count)
@@ -81,6 +85,10 @@ class AppleFinder(Game):
             if self.map[(x, y)] == self.EMPTY:
                 self.map[(x, y)] = char
                 placed_objects += 1
+
+    def do_turn(self):
+        self.handle_key(self.player.move)
+        self.update_vars_for_player()
 
     def handle_key(self, key):
         self.turns += 1
@@ -140,7 +148,7 @@ class AppleFinder(Game):
         else:
             raise Exception("We didn't find an apple")
 
-    def get_vars_for_bot(self):
+    def update_vars_for_player(self):
         bot_vars = {}
 
         x_dir, y_dir = self.find_closest_apple(*self.player_pos)
@@ -160,7 +168,7 @@ class AppleFinder(Game):
         if self.map[(self.player_pos[0], (self.player_pos[1]+1)%self.MAP_HEIGHT)] == self.PIT:
             bot_vars["pit_to_south"] = 1
 
-        return bot_vars
+        self.player.bot_vars = bot_vars
 
     @staticmethod
     def default_prog_for_bot(language):
