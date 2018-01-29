@@ -18,7 +18,7 @@ class AppleFinder(Game):
     CHAR_WIDTH = 16
     CHAR_HEIGHT = 16
     GAME_TITLE = "Apple Hunt"
-    CHAR_SET = "terminal16x16_gs_ro.png"
+    CHAR_SET = "resources/terminal16x16_gs_ro.png"
 
     APPLE_EATING_RESPONSES = ["Yummy!", "That hit the spot!", "Wow!", "Amazing!", "So good!",
                               "An apple a day keeps the robots away.", "Yummy in the tummy!", #"Oh my, that was good!",
@@ -165,11 +165,11 @@ class AppleFinder(Game):
     @staticmethod
     def default_prog_for_bot(language):
         if language == GameLanguage.LITTLEPY:
-            return open("apple_bot.lp", "r").read()
+            return open("resources/apple_bot.lp", "r").read()
 
     @staticmethod
     def get_intro():
-        return open("intro.md", "r").read()
+        return open("resources/intro.md", "r").read()
 
     def get_score(self):
         return self.apples_eaten
