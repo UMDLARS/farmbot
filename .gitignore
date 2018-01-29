@@ -1,0 +1,6 @@
+.idea/
+temp_game/
+
+.*.swp
+*~
+*.pyc
