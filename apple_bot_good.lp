@@ -1,4 +1,5 @@
 # Apple Example Bot
+# Name: Good Bot
 
 if x_dir is east {
   move = east
