@@ -111,7 +111,7 @@ class AppleFinder(GridGame):
         if self.map[(self.player_pos[0], self.player_pos[1])] == self.APPLE:
             self.apples_eaten += 1
             self.apples_left -= 1
-            self.msg_panel += [self.random.choice(list(set(self.APPLE_EATING_RESPONSES) - set(self.msg_panel.get_current_messages())))]
+            self.msg_panel.add(self.random.choice(list(set(self.APPLE_EATING_RESPONSES) - set(self.msg_panel.get_current_messages()))))
         elif self.map[(self.player_pos[0], self.player_pos[1])] == self.PIT:
             self.in_pit = True
         self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
@@ -120,6 +120,14 @@ class AppleFinder(GridGame):
             self.level += 1
             self.place_apples(self.NUM_OF_APPLES)
             self.place_pits(self.NUM_OF_PITS_PER_LEVEL)
+
+        # End of the game
+        if self.turns >= self.MAX_TURNS:
+            self.running = False
+            self.msg_panel.add("You are out of moves.")
+        elif self.in_pit:
+            self.running = False
+            self.msg_panel.add("You fell into a pit :(")
 
     def is_running(self):
         return self.running
@@ -183,19 +191,11 @@ class AppleFinder(GridGame):
         return self.apples_eaten
 
     def draw_screen(self, frame_buffer):
-        # End of the game
-        if self.turns >= self.MAX_TURNS:
-            self.running = False
-            self.msg_panel.add("You are out of moves.")
-        elif self.in_pit:
-            self.running = False
-            self.msg_panel += ["You fell into a pit :("]
-
         if not self.running:
             if self.apples_eaten == 0:
-                self.msg_panel += ["You ate "+str(self.apples_eaten)+" apples. Better luck next time :("]
+                self.msg_panel.add("You ate " + str(self.apples_eaten) + " apples. Better luck next time :(")
             else:
-                self.msg_panel += ["You ate "+str(self.apples_eaten)+" apples. Good job!"]
+                self.msg_panel.add("You ate " + str(self.apples_eaten) + " apples. Good job!")
 
         # Update Status
         self.status_panel["Apples"] = self.apples_eaten
