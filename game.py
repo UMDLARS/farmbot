@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 import math
 from CYLGame import GameLanguage
 from CYLGame import GridGame
@@ -39,8 +39,8 @@ class AppleFinder(GridGame):
         self.random = random
         self.running = True
         self.in_pit = False
-        centerx = self.MAP_WIDTH / 2
-        centery = self.MAP_HEIGHT / 2
+        centerx = self.MAP_WIDTH // 2
+        centery = self.MAP_HEIGHT // 2
         self.player_pos = [centerx, centery]
         self.apples_eaten = 0
         self.apples_left = 0
@@ -51,11 +51,11 @@ class AppleFinder(GridGame):
         self.msg_panel = MessagePanel(self.MSG_START, self.MAP_HEIGHT+1, self.SCREEN_WIDTH - self.MSG_START, 5)
         self.status_panel = StatusPanel(0, self.MAP_HEIGHT+1, self.MSG_START, 5)
         self.panels = [self.msg_panel, self.status_panel]
-        self.msg_panel.add("Welcome to "+self.GAME_TITLE+"!!!")
+        self.msg_panel.add("Welcome to " + self.GAME_TITLE + "!!!")
         self.msg_panel.add("Try to eat as many apples as possible")
 
     def init_board(self):
-        self.map = MapPanel(0, 0, self.MAP_WIDTH, self.MAP_HEIGHT+1, self.EMPTY,
+        self.map = MapPanel(0, 0, self.MAP_WIDTH, self.MAP_HEIGHT, self.EMPTY,
                             border=PanelBorder.create(bottom="-"))
         self.panels += [self.map]
 
