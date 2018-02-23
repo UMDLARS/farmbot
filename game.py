@@ -69,6 +69,9 @@ class AppleFinder(GridGame):
         self.update_vars_for_player()
         return self.player
 
+    def start_game(self):
+        pass
+
     def place_apples(self, count):
         self.place_objects(self.APPLE, count)
         self.apples_left = self.apples_left + count
@@ -157,8 +160,6 @@ class AppleFinder(GridGame):
             raise Exception("We didn't find an apple")
 
     def update_vars_for_player(self):
-        bot_vars = {}
-
         x_dir, y_dir = self.find_closest_apple(*self.player_pos)
 
         x_dir_to_char = {-1: ord("a"), 1: ord("d"), 0: 0}
