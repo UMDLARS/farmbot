@@ -7,7 +7,7 @@ python3.6 -m pip install pipenv
 pipenv install
 ```
 
-If you dod have `python3.6` install it. To install it on Ubuntu 16.04 and 14.04 run:
+If you don't have `python3.6` install it. To install it on Ubuntu 16.04 and 14.04 run:
 ```
 sudo add-apt-repository ppa:jonathonf/python-3.6
 sudo apt-get update
