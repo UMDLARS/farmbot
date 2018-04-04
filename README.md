@@ -11,7 +11,7 @@ If you don't have `python3.6` install it. To install it on Ubuntu 16.04 and 14.0
 ```
 sudo add-apt-repository ppa:jonathonf/python-3.6
 sudo apt-get update
-sudo apt-get install python3.6 python3.6-dev
+sudo apt-get install python3.6 python3.6-dev python3.6-pip
 ```
 
 ### Running
