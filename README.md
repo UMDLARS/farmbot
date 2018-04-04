@@ -1,25 +1,9 @@
 # Apple Hunt
 This is a example game created to serve as a template for other's making games for UMDCYL.
-## Getting Started
-### Install
-```
-python3.6 -m pip install pipenv
-git clone https://github.com/UMDLARS/applehunt.git
-cd applehunt
-pipenv install
-```
 
-If you don't have `python3.6` install it. To install it on Ubuntu 16.04 and 14.04 run:
-```
-sudo apt-get install python3-pip libssl-dev
-sudo add-apt-repository ppa:jonathonf/python-3.6
-sudo apt-get update
-sudo apt-get install python3.6 python3.6-dev python3.6-pip
-```
+# Installing and Playing This Game
 
-### Running
-```
-pipenv run python game.py serve
-```
+To install and play this game locally, follow the instructions in the [CYLGame repository](https://github.com/UMDLARS/CYLGame/blob/master/INSTALL_GAME.md).
 
-If you have any questions feel free to contact: Jonathan Beaulieu @ <beau0307@d.umn.edu>
+
+If you have any questions feel free to contact the devteam at <umdcyl-dev@d.umn.edu>.
