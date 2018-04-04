@@ -4,6 +4,8 @@ This is a example game created to serve as a template for other's making games f
 ### Install
 ```
 python3.6 -m pip install pipenv
+git clone https://github.com/UMDLARS/applehunt.git
+cd applehunt
 pipenv install
 ```
 
