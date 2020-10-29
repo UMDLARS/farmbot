@@ -18,8 +18,8 @@ class AppleFinder(GridGame):
     MAX_MSG_LEN = SCREEN_WIDTH - MSG_START - 1
     CHAR_WIDTH = 16
     CHAR_HEIGHT = 16
-    GAME_TITLE = "Apple Hunt"
-    CHAR_SET = "resources/terminal16x16_gs_ro.png"
+    GAME_TITLE = "FarmBot 5000"
+    CHAR_SET = "resources/farmbot-terminal16x16_gs_ro.png"
 
     APPLE_EATING_RESPONSES = ["Yummy!", "That hit the spot!", "Wow!", "Amazing!", "So good!",
                               "An apple a day keeps the robots away.", "Yummy in the tummy!", #"Oh my, that was good!",
@@ -30,10 +30,23 @@ class AppleFinder(GridGame):
     NUM_OF_PITS_PER_LEVEL = 8
     MAX_TURNS = 300
 
-    PLAYER = '@'
+    # will start from the base tile set
+
+    PLAYER = chr(255)
+    WATER = chr(247)
+    MOUNTAIN = chr(30)
+    GROUND = chr(176)
+    HOLE = ' '
+    BASE = '#'
+    # will start by using numbers for plant growth stages
+    ROCK = chr(239)
+    BEAST = chr(2)
+    TREE1 = chr(5)
+    TREE2 = chr(6)
+    EMPTY = GROUND
+    PIT = HOLE
+    APPLE = chr(15)
     APPLE = 'O'
-    EMPTY = ' '
-    PIT = '^'
 
     def __init__(self, random):
         self.random = random
@@ -52,7 +65,7 @@ class AppleFinder(GridGame):
         self.status_panel = StatusPanel(0, self.MAP_HEIGHT+1, self.MSG_START, 5)
         self.panels = [self.msg_panel, self.status_panel]
         self.msg_panel.add("Welcome to " + self.GAME_TITLE + "!!!")
-        self.msg_panel.add("Try to eat as many apples as possible")
+        self.msg_panel.add("Try to grow plants and collect seeds!")
 
     def init_board(self):
         self.map = MapPanel(0, 0, self.MAP_WIDTH, self.MAP_HEIGHT, self.EMPTY,
