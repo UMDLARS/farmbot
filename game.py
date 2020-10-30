@@ -79,8 +79,10 @@ class AppleFinder(GridGame):
                             border=PanelBorder.create(bottom="-"))
         self.panels += [self.map]
 
-        self.place_apples(self.NUM_OF_APPLES)
+
+        self.place_rocks(10)
         self.place_pits(self.NUM_OF_PITS_START)
+        self.place_apples(self.NUM_OF_APPLES)
 
     def create_new_player(self, prog):
         self.player = DefaultGridPlayer(prog, self.get_move_consts())
@@ -95,6 +97,9 @@ class AppleFinder(GridGame):
     def place_apples(self, count):
         self.place_objects(self.APPLE, count)
         self.apples_left = self.apples_left + count
+
+    def place_rocks(self, count):
+        self.place_objects(self.ROCK, count)
 
     def place_pits(self, count):
         self.place_objects(self.PIT, count)
@@ -131,6 +136,23 @@ class AppleFinder(GridGame):
             self.running = False
             return
 
+        # check for collisions and reverse the movement if necessary
+        if self.map[(self.player_pos[0], self.player_pos[1])] == self.ROCK:
+
+            self.msg_panel.add("You bumped into a rock!")
+
+            # if the new position is a rock, move robot back
+            # but lose your turn
+
+            if key == "w":
+                self.player_pos[1] += 1
+            elif key == "s":
+                self.player_pos[1] -= 1
+            elif key == "a":
+                self.player_pos[0] += 1
+            elif key == "d":
+                self.player_pos[0] -= 1
+
         # robot can "warp" around the edges of the map
         # this may not be what we want...
         self.player_pos[0] %= self.MAP_WIDTH
@@ -147,6 +169,11 @@ class AppleFinder(GridGame):
         # robot falls into a pit
         elif self.map[(self.player_pos[0], self.player_pos[1])] == self.PIT:
             self.in_pit = True
+
+        # check for collisions and reverse the movement if necessary
+        if self.map[(self.player_pos[0], self.player_pos[1])] == self.BASE:
+
+            self.msg_panel.add("You returned to base!")
 
         # update new player position
         # save what robot is going to step on
