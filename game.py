@@ -154,11 +154,6 @@ class AppleFinder(GridGame):
         # move robot onto that item
         self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
 
-        if self.apples_left == 0:
-            self.level += 1
-            self.place_apples(self.NUM_OF_APPLES)
-            self.place_pits(self.NUM_OF_PITS_PER_LEVEL)
-
         # End of the game
         if self.turns >= self.MAX_TURNS:
             self.running = False
@@ -195,22 +190,29 @@ class AppleFinder(GridGame):
             raise Exception("We didn't find an apple")
 
     def update_vars_for_player(self):
-        x_dir, y_dir = self.find_closest_apple(*self.player_pos)
+        
+        bot_vars = {}
 
-        x_dir_to_char = {-1: ord("a"), 1: ord("d"), 0: 0}
-        y_dir_to_char = {-1: ord("w"), 1: ord("s"), 0: 0}
+        # look for closest apple -- disabled for now
+        # x_dir, y_dir = self.find_closest_apple(*self.player_pos)
+        #
+        # x_dir_to_char = {-1: ord("a"), 1: ord("d"), 0: 0}
+        # y_dir_to_char = {-1: ord("w"), 1: ord("s"), 0: 0}
 
-        bot_vars = {"x_dir": x_dir_to_char[x_dir], "y_dir": y_dir_to_char[y_dir],
-                    "pit_to_east": 0, "pit_to_west": 0, "pit_to_north": 0, "pit_to_south": 0}
+        # bot_vars = {"x_dir": x_dir_to_char[x_dir], "y_dir": y_dir_to_char[y_dir],
+        #            "pit_to_east": 0, "pit_to_west": 0, "pit_to_north": 0, "pit_to_south": 0}
 
-        if self.map[((self.player_pos[0]+1)%self.MAP_WIDTH, self.player_pos[1])] == self.PIT:
-            bot_vars["pit_to_east"] = 1
-        if self.map[((self.player_pos[0]-1)%self.MAP_WIDTH, self.player_pos[1])] == self.PIT:
-            bot_vars["pit_to_west"] = 1
-        if self.map[(self.player_pos[0], (self.player_pos[1]-1)%self.MAP_HEIGHT)] == self.PIT:
-            bot_vars["pit_to_north"] = 1
-        if self.map[(self.player_pos[0], (self.player_pos[1]+1)%self.MAP_HEIGHT)] == self.PIT:
-            bot_vars["pit_to_south"] = 1
+        # bot_vars = {"x_dir": x_dir_to_char[x_dir], "y_dir": y_dir_to_char[y_dir],
+        #            "pit_to_east": 0, "pit_to_west": 0, "pit_to_north": 0, "pit_to_south": 0}
+
+        # if self.map[((self.player_pos[0]+1)%self.MAP_WIDTH, self.player_pos[1])] == self.PIT:
+        #    bot_vars["pit_to_east"] = 1
+        # if self.map[((self.player_pos[0]-1)%self.MAP_WIDTH, self.player_pos[1])] == self.PIT:
+        #    bot_vars["pit_to_west"] = 1
+        # if self.map[(self.player_pos[0], (self.player_pos[1]-1)%self.MAP_HEIGHT)] == self.PIT:
+        #    bot_vars["pit_to_north"] = 1
+        # if self.map[(self.player_pos[0], (self.player_pos[1]+1)%self.MAP_HEIGHT)] == self.PIT:
+        #    bot_vars["pit_to_south"] = 1
 
         self.player.bot_vars = bot_vars
 
