@@ -47,20 +47,27 @@ class AppleFinder(GridGame):
     PIT = HOLE
     APPLE = chr(15)
     APPLE = 'O'
+    BASE = chr(233)
 
     def __init__(self, random):
         self.random = random
         self.running = True
         self.in_pit = False
-        centerx = self.MAP_WIDTH // 2
-        centery = self.MAP_HEIGHT // 2
-        self.player_pos = [centerx, centery]
+
+
+        # place robot and base randomly
+        x = self.random.randint(0, self.MAP_WIDTH - 1)
+        y = self.random.randint(0, self.MAP_HEIGHT - 1)
+        self.base_bos = [x, y]
+        self.player_pos = [x, y]
+
         self.apples_eaten = 0
         self.apples_left = 0
         self.apple_pos = []
         self.objects = []
         self.turns = 0
         self.level = 0
+        self.underneath_robot = self.BASE # thing underneath the player
         self.msg_panel = MessagePanel(self.MSG_START, self.MAP_HEIGHT+1, self.SCREEN_WIDTH - self.MSG_START, 5)
         self.status_panel = StatusPanel(0, self.MAP_HEIGHT+1, self.MSG_START, 5)
         self.panels = [self.msg_panel, self.status_panel]
@@ -109,7 +116,9 @@ class AppleFinder(GridGame):
     def handle_key(self, key):
         self.turns += 1
 
-        self.map[(self.player_pos[0], self.player_pos[1])] = self.EMPTY
+        # when robot moves, we restore what was underneath robot
+        self.map[(self.player_pos[0], self.player_pos[1])] = self.underneath_robot
+
         if key == "w":
             self.player_pos[1] -= 1
         if key == "s":
@@ -122,14 +131,28 @@ class AppleFinder(GridGame):
             self.running = False
             return
 
+        # robot can "warp" around the edges of the map
+        # this may not be what we want...
         self.player_pos[0] %= self.MAP_WIDTH
         self.player_pos[1] %= self.MAP_HEIGHT
+
+
+        # robot eats an apple
         if self.map[(self.player_pos[0], self.player_pos[1])] == self.APPLE:
             self.apples_eaten += 1
             self.apples_left -= 1
             self.msg_panel.add(self.random.choice(list(set(self.APPLE_EATING_RESPONSES) - set(self.msg_panel.get_current_messages()))))
+            self.map[(self.player_pos[0], self.player_pos[1])] = self.EMPTY # apple eaten
+
+        # robot falls into a pit
         elif self.map[(self.player_pos[0], self.player_pos[1])] == self.PIT:
             self.in_pit = True
+
+        # update new player position
+        # save what robot is going to step on
+        self.underneath_robot = self.map[(self.player_pos[0], self.player_pos[1])]
+
+        # move robot onto that item
         self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
 
         if self.apples_left == 0:
