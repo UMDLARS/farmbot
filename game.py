@@ -58,9 +58,7 @@ class AppleFinder(GridGame):
         # place robot and base randomly
         x = self.random.randint(0, self.MAP_WIDTH - 1)
         y = self.random.randint(0, self.MAP_HEIGHT - 1)
-        self.base_bos = [x, y]
         self.player_pos = [x, y]
-
         self.apples_eaten = 0
         self.apples_left = 0
         self.apple_pos = []
