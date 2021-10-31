@@ -29,6 +29,8 @@ class AppleFinder(GridGame):
     NUM_OF_PITS_START = 0
     NUM_OF_PITS_PER_LEVEL = 8
     MAX_TURNS = 300
+    MAX_PONDS = 3
+    MAX_POND_SIZE = 8
 
     # will start from the base tile set
 
@@ -55,18 +57,12 @@ class AppleFinder(GridGame):
         self.in_pit = False
 
 
-        # place robot and base randomly
-        x = self.random.randint(0, self.MAP_WIDTH - 1)
-        y = self.random.randint(0, self.MAP_HEIGHT - 1)
-        self.player_pos = [x, y]
-
         self.apples_eaten = 0
         self.apples_left = 0
         self.apple_pos = []
         self.objects = []
         self.turns = 0
         self.level = 0
-        self.underneath_robot = self.BASE # thing underneath the player
         self.msg_panel = MessagePanel(self.MSG_START, self.MAP_HEIGHT+1, self.SCREEN_WIDTH - self.MSG_START, 5)
         self.status_panel = StatusPanel(0, self.MAP_HEIGHT+1, self.MSG_START, 5)
         self.panels = [self.msg_panel, self.status_panel]
@@ -82,6 +78,24 @@ class AppleFinder(GridGame):
         self.place_rocks(10)
         self.place_pits(self.NUM_OF_PITS_START)
         self.place_apples(self.NUM_OF_APPLES)
+        self.place_ponds(self.MAX_POND_SIZE, self.MAX_PONDS)
+        
+        # place robot and base randomly
+        # robot and base cannot start in water
+        has_safe_loc = False
+        while not has_safe_loc:
+            
+            # pick a starting x y location that isn't water
+            x = self.random.randint(0, self.MAP_WIDTH - 1)
+            y = self.random.randint(0, self.MAP_HEIGHT - 1)
+
+            if self.map[(x, y)] != self.WATER:
+                has_safe_loc = True # found a safe spot
+
+            self.player_pos = [x, y]
+            self.underneath_robot = self.BASE # thing underneath the player
+
+
 
     def create_new_player(self, prog):
         self.player = DefaultGridPlayer(prog, self.get_move_consts())
@@ -102,6 +116,32 @@ class AppleFinder(GridGame):
 
     def place_pits(self, count):
         self.place_objects(self.PIT, count)
+
+    def place_ponds(self, max_size, max_count):
+        # pick a random location that is at least max_size from
+        # right side of screen
+        for i in range(self.MAX_PONDS):
+            pond_width = self.random.randint(0, max_size) # this pond's width
+            if pond_width:
+                print("making a pond of width %d..." % (pond_width))
+                pond_x = self.random.randint(0, self.MAP_WIDTH - pond_width) # pond x loc
+                pond_y = self.random.randint(pond_width, self.MAP_HEIGHT - pond_width) # pond y loc
+
+                # draw pond's initial line
+                for j in range(pond_width):
+                    self.map[(pond_x + j, pond_y)] = self.WATER
+
+                # draw pond's upper and lower lines
+                y_offset = 1 # above and below
+                x_offset = 1
+                linelen = pond_width - 2
+                while linelen > 0:
+                    for j in range(linelen):
+                        self.map[(pond_x + x_offset + j, pond_y + y_offset)] = self.WATER
+                        self.map[(pond_x + x_offset + j, pond_y - y_offset)] = self.WATER
+                    linelen -= 2
+                    y_offset += 1
+                    x_offset += 1
 
     def place_objects(self, char, count):
         placed_objects = 0
