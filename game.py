@@ -169,6 +169,49 @@ class AppleFinder(GridGame):
                 self.map[(river_x, river_y)] = self.WATER
 
 
+    def carve_river(self):
+        # run a river across the map
+        # the river starts on the left or top side of the screen
+        # does a random-ish walk until it hits another map boundary
+        # if on left, cannot move "west" and prefers "east"
+        # if no top, cannot move "north" and prefers "south"
+
+        starts = ["north", "east"]
+        start = starts[self.random.randint(0,1)]
+        direction = None
+        river_x = 0
+        river_y = 0
+
+        if start == "north":
+            river_x = self.random.randint(0, self.MAP_WIDTH)
+            direction = "south"
+        else:
+            river_y = self.random.randint(0, self.MAP_HEIGHT)
+            direction = "west"
+
+        print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
+
+        self.map[(river_x, river_y)] = self.WATER
+
+        hit_edge = False
+        while not hit_edge:
+            if direction == "south":
+                deck = [(0, 1), (0,1), (-1, 0), (1, 0)]
+            else:
+                deck = [(1, 0), (1,0), (0, -1), (0, 1)]
+
+            self.random.shuffle(deck)
+            river_x += deck[0][0]
+            river_y += deck[0][1]
+
+            if river_x == self.MAP_WIDTH or river_x < 0:
+                hit_edge = True
+            elif river_y == self.MAP_HEIGHT or river_y < 0:
+                hit_edge = True
+            else:
+                self.map[(river_x, river_y)] = self.WATER
+
+
     def place_ponds(self, max_size, max_count):
         # pick a random location that is at least max_size from
         # right side of screen
@@ -281,6 +324,9 @@ class AppleFinder(GridGame):
                 self.player_pos[0] += 1
             elif key == "d":
                 self.player_pos[0] -= 1
+
+        if key in "wasd":
+            self.energy -= 1 # each move costs one E
 
         # robot can "warp" around the edges of the map
         # this may not be what we want...
