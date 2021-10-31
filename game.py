@@ -21,14 +21,10 @@ class AppleFinder(GridGame):
     GAME_TITLE = "FarmBot 5000"
     CHAR_SET = "resources/farmbot-terminal16x16_gs_ro.png"
 
-    APPLE_EATING_RESPONSES = ["Yummy!", "That hit the spot!", "Wow!", "Amazing!", "So good!",
-                              "An apple a day keeps the robots away.", "Yummy in the tummy!", #"Oh my, that was good!",
-                              "Bon appetit", "Ewwww, I think that one had a worm."]
-
     NUM_OF_APPLES = 4
     NUM_OF_PITS_START = 0
     NUM_OF_PITS_PER_LEVEL = 8
-    MAX_TURNS = 300
+    MAX_TURNS = 1000
     MAX_PONDS = 3
     MAX_POND_SIZE = 8
 
@@ -57,6 +53,11 @@ class AppleFinder(GridGame):
         self.in_pit = False
 
 
+        self.player_start_x = 0
+        self.player_start_y = 0
+        self.max_energy = 200
+        self.base_energy = 160
+        self.energy = self.base_energy
         self.apples_eaten = 0
         self.apples_left = 0
         self.apple_pos = []
@@ -87,16 +88,19 @@ class AppleFinder(GridGame):
         while not has_safe_loc:
             
             # pick a starting x y location that isn't water
-            x = self.random.randint(0, self.MAP_WIDTH - 1)
-            y = self.random.randint(0, self.MAP_HEIGHT - 1)
+            self.player_start_x = self.random.randint(0, self.MAP_WIDTH - 1)
+            self.player_start_y = self.random.randint(0, self.MAP_HEIGHT - 1)
 
-            if self.map[(x, y)] != self.WATER:
+            if self.map[(self.player_start_x, self.player_start_y)] != self.WATER:
                 has_safe_loc = True # found a safe spot
 
-            self.player_pos = [x, y]
+            self.player_pos = [self.player_start_x, self.player_start_y]
             self.underneath_robot = self.BASE # thing underneath the player
 
-
+    def add_check_energy(self, amount):
+        self.energy += amount
+        if self.energy > 200:
+            self.energy == 200
 
     def create_new_player(self, prog):
         self.player = DefaultGridPlayer(prog, self.get_move_consts())
@@ -138,7 +142,7 @@ class AppleFinder(GridGame):
             river_y = self.random.randint(0, self.MAP_HEIGHT)
             direction = "west"
 
-        print("River will go %s, starting from (%d, %d)." % (start, river_x, river_y))
+        print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
 
         self.map[(river_x, river_y)] = self.WATER
 
@@ -236,6 +240,9 @@ class AppleFinder(GridGame):
             elif key == "d":
                 self.player_pos[0] -= 1
 
+        if key in "wasd":
+            self.energy -= 1 # each move costs one E
+
         # robot can "warp" around the edges of the map
         # this may not be what we want...
         self.player_pos[0] %= self.MAP_WIDTH
@@ -246,8 +253,9 @@ class AppleFinder(GridGame):
         if self.map[(self.player_pos[0], self.player_pos[1])] == self.APPLE:
             self.apples_eaten += 1
             self.apples_left -= 1
-            self.msg_panel.add(self.random.choice(list(set(self.APPLE_EATING_RESPONSES) - set(self.msg_panel.get_current_messages()))))
+            self.msg_panel.add("You ate an apple and got 20 energy!")
             self.map[(self.player_pos[0], self.player_pos[1])] = self.EMPTY # apple eaten
+            self.add_check_energy(20) # eating an apple gives some energy
 
         # robot falls into a pit
         elif self.map[(self.player_pos[0], self.player_pos[1])] == self.PIT:
@@ -257,6 +265,11 @@ class AppleFinder(GridGame):
         if self.map[(self.player_pos[0], self.player_pos[1])] == self.BASE:
 
             self.msg_panel.add("You returned to base!")
+            if self.energy < self.base_energy:
+                self.msg_panel.add("Charging you up to 160!")
+                self.energy = self.base_energy
+            else:
+                self.msg_panel.add("Already above 160.")
 
         # update new player position
         # save what robot is going to step on
@@ -269,6 +282,9 @@ class AppleFinder(GridGame):
         if self.turns >= self.MAX_TURNS:
             self.running = False
             self.msg_panel.add("You are out of moves.")
+        elif self.energy == 0:
+            self.running = False
+            self.msg_panel.add("You ran out of energy.")
         elif self.in_pit:
             self.running = False
             self.msg_panel.add("You fell into a pit :(")
@@ -347,6 +363,9 @@ class AppleFinder(GridGame):
                 self.msg_panel.add("You ate " + str(self.apples_eaten) + " apples. Good job!")
 
         # Update Status
+
+
+        self.status_panel["Energy"] = self.energy
         self.status_panel["Apples"] = self.apples_eaten
         self.status_panel["Move"] = str(self.turns) + " of " + str(self.MAX_TURNS)
 
