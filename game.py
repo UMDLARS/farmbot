@@ -22,8 +22,8 @@ class AppleFinder(GridGame):
     CHAR_SET = "resources/farmbot-terminal16x16_gs_ro.png"
 
     NUM_OF_APPLES = 4
-    NUM_OF_PITS_START = 0
-    NUM_OF_PITS_PER_LEVEL = 8
+    NUM_OF_HOLES_START = 10
+    NUM_OF_HOLES_PER_LEVEL = 10
     MAX_TURNS = 1000
     MAX_PONDS = 3
     MAX_POND_SIZE = 8
@@ -42,7 +42,6 @@ class AppleFinder(GridGame):
     TREE1 = chr(5)
     TREE2 = chr(6)
     EMPTY = GROUND
-    PIT = HOLE
     APPLE = chr(15)
     APPLE = 'O'
     BASE = chr(233)
@@ -50,8 +49,6 @@ class AppleFinder(GridGame):
     def __init__(self, random):
         self.random = random
         self.running = True
-        self.in_pit = False
-
 
         self.player_start_x = 0
         self.player_start_y = 0
@@ -77,7 +74,14 @@ class AppleFinder(GridGame):
 
 
         self.place_rocks(10)
-        self.place_pits(self.NUM_OF_PITS_START)
+        self.place_holes(self.NUM_OF_HOLES_START)
+
+        # check all holes for water adjacency
+        for x in range(self.MAP_WIDTH - 1):
+            for y in range(self.MAP_HEIGHT - 1):
+                if self.map[(x, y)] == self.HOLE:
+                    self.water_check((x,y))
+
         self.place_apples(self.NUM_OF_APPLES)
         self.place_ponds(self.MAX_POND_SIZE, self.MAX_PONDS)
         self.carve_river()
@@ -119,8 +123,51 @@ class AppleFinder(GridGame):
     def place_rocks(self, count):
         self.place_objects(self.ROCK, count)
 
-    def place_pits(self, count):
-        self.place_objects(self.PIT, count)
+    def place_holes(self, count):
+        self.place_objects(self.HOLE, count)
+
+    def carve_river(self):
+        # run a river across the map
+        # the river starts on the left or top side of the screen
+        # does a random-ish walk until it hits another map boundary
+        # if on left, cannot move "west" and prefers "east"
+        # if no top, cannot move "north" and prefers "south"
+
+        starts = ["north", "east"]
+        start = starts[self.random.randint(0,1)]
+        direction = None
+        river_x = 0
+        river_y = 0
+
+        if start == "north":
+            river_x = self.random.randint(0, self.MAP_WIDTH)
+            direction = "south"
+        else:
+            river_y = self.random.randint(0, self.MAP_HEIGHT)
+            direction = "west"
+
+        print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
+
+        self.map[(river_x, river_y)] = self.WATER
+
+        hit_edge = False
+        while not hit_edge:
+            if direction == "south":
+                deck = [(0, 1), (0,1), (-1, 0), (1, 0)]
+            else:
+                deck = [(1, 0), (1,0), (0, -1), (0, 1)]
+
+            self.random.shuffle(deck)
+            river_x += deck[0][0]
+            river_y += deck[0][1]
+
+            if river_x == self.MAP_WIDTH or river_x < 0:
+                hit_edge = True
+            elif river_y == self.MAP_HEIGHT or river_y < 0:
+                hit_edge = True
+            else:
+                self.map[(river_x, river_y)] = self.WATER
+
 
     def carve_river(self):
         # run a river across the map
@@ -205,11 +252,49 @@ class AppleFinder(GridGame):
         self.handle_key(self.player.move)
         self.update_vars_for_player()
 
+    def water_check(self, location):
+
+        # if this hole is touching water, change it to water
+        # then, recursively check all non-water neighbors
+
+        neighbors = [(1,0), (-1,0), (0,1), (0,-1)]
+        
+        print("Hole at (%d,%d) -- does it have a water neighbor?" % (location[0], location[1]))
+        for neighbor in neighbors:
+            
+            test_x = location[0] + neighbor[0]
+            test_y = location[1] + neighbor[1]
+
+            if (test_x > self.MAP_WIDTH - 1 or test_y > self.MAP_HEIGHT - 1 
+                    or test_x < 0 or test_y < 0):
+                continue
+
+            if self.map[(test_x, test_y)] == self.WATER:
+                print("We found water at neighbor %d,%d! Filling (%d,%d)" % 
+                        (test_x, test_y, location[0], location[1]))
+                # if a neighbor is water, then I'm water
+                self.map[(location[0], location[1])] = self.WATER
+                if location == self.player_pos:
+                    self.underneath_robot = self.WATER
+
+
+                # if I'm water, then recurse for any of my neighbors
+                # if those neighbors are HOLES
+
+                for neighbor in neighbors:
+                    recurse_x = location[0] + neighbor[0]
+                    recurse_y = location[1] + neighbor[1]
+                    if self.map[(recurse_x, recurse_y)] == self.HOLE:
+                        print("Recursing to check HOLE neighbor at (%d,%d)..." % 
+                                (recurse_x, recurse_y))
+                        self.water_check((recurse_x, recurse_y))
+
     def handle_key(self, key):
         self.turns += 1
 
         # when robot moves, we restore what was underneath robot
         self.map[(self.player_pos[0], self.player_pos[1])] = self.underneath_robot
+
 
         if key == "w":
             self.player_pos[1] -= 1
@@ -257,13 +342,9 @@ class AppleFinder(GridGame):
             self.map[(self.player_pos[0], self.player_pos[1])] = self.EMPTY # apple eaten
             self.add_check_energy(20) # eating an apple gives some energy
 
-        # robot falls into a pit
-        elif self.map[(self.player_pos[0], self.player_pos[1])] == self.PIT:
-            self.in_pit = True
-
         # check for collisions and reverse the movement if necessary
         if self.map[(self.player_pos[0], self.player_pos[1])] == self.BASE:
-
+            
             self.msg_panel.add("You returned to base!")
             if self.energy < self.base_energy:
                 self.msg_panel.add("Charging you up to 160!")
@@ -278,6 +359,35 @@ class AppleFinder(GridGame):
         # move robot onto that item
         self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
 
+        # player digs a hole
+        # fill hole with water if adjacent to water
+        if key == "x":
+            self.map[(self.player_pos[0], self.player_pos[1])] = self.HOLE
+            self.underneath_robot = self.HOLE
+
+            # check hole -- and any adjacent holes -- for water
+            self.water_check(self.player_pos)
+
+            # fix up map in case hole was filled with water
+            self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
+
+        
+        # calculate move costs
+
+        pmoved = False # did the player initiate this move?
+
+        if key in "wasd":
+            # these things cost 1 E
+            self.energy -= 1
+            pmoved = True # this player moved THEMSELVES
+        elif key in "x":
+            # these things cost 5 E
+            self.energy -= 5
+
+        if pmoved and self.underneath_robot == self.WATER:
+            self.energy -= 1 # swimming costs 2 total
+            self.msg_panel.add("Swimming is hard!")
+
         # End of the game
         if self.turns >= self.MAX_TURNS:
             self.running = False
@@ -285,9 +395,12 @@ class AppleFinder(GridGame):
         elif self.energy == 0:
             self.running = False
             self.msg_panel.add("You ran out of energy.")
-        elif self.in_pit:
+        elif self.underneath_robot == self.HOLE and pmoved:
+            # game over if stepped into a hole
+            # but not if they dug themselves into a hole
             self.running = False
-            self.msg_panel.add("You fell into a pit :(")
+            self.msg_panel.add("You fell into a hole :(")
+            print("You fell into a hole!")
 
     def is_running(self):
         return self.running
