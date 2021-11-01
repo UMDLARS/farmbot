@@ -325,9 +325,6 @@ class AppleFinder(GridGame):
             elif key == "d":
                 self.player_pos[0] -= 1
 
-        if key in "wasd":
-            self.energy -= 1 # each move costs one E
-
         # robot can "warp" around the edges of the map
         # this may not be what we want...
         self.player_pos[0] %= self.MAP_WIDTH
