@@ -392,7 +392,7 @@ class AppleFinder(GridGame):
         if self.turns >= self.MAX_TURNS:
             self.running = False
             self.msg_panel.add("You are out of moves.")
-        elif self.energy == 0:
+        elif self.energy <= 0:
             self.running = False
             self.msg_panel.add("You ran out of energy.")
         elif self.underneath_robot == self.HOLE and pmoved:
