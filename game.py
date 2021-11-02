@@ -140,10 +140,10 @@ class AppleFinder(GridGame):
         river_y = 0
 
         if start == "north":
-            river_x = self.random.randint(0, self.MAP_WIDTH)
+            river_x = self.random.randint(0, self.MAP_WIDTH - 1)
             direction = "south"
         else:
-            river_y = self.random.randint(0, self.MAP_HEIGHT)
+            river_y = self.random.randint(0, self.MAP_HEIGHT - 1)
             direction = "west"
 
         print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
@@ -161,9 +161,9 @@ class AppleFinder(GridGame):
             river_x += deck[0][0]
             river_y += deck[0][1]
 
-            if river_x == self.MAP_WIDTH or river_x < 0:
+            if river_x >= self.MAP_WIDTH or river_x < 0:
                 hit_edge = True
-            elif river_y == self.MAP_HEIGHT or river_y < 0:
+            elif river_y >= self.MAP_HEIGHT or river_y < 0:
                 hit_edge = True
             else:
                 self.map[(river_x, river_y)] = self.WATER
