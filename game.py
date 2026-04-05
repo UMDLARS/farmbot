@@ -9,6 +9,10 @@ from CYLGame import PanelBorder
 from CYLGame.Player import DefaultGridPlayer
 
 
+def debug(tval, string, ending='\n'):
+    if tval:
+        print(string, end=ending)
+
 class AppleFinder(GridGame):
     MAP_WIDTH = 60
     MAP_HEIGHT = 25
@@ -159,6 +163,9 @@ class AppleFinder(GridGame):
         self.place_objects(self.HOLE, count)
 
     def update_wetmap(self):
+
+        ldebug = False
+
         # iterate over map
         # for every water cell, add 1 wetness to surrounding cells, e.g.
         #
@@ -172,7 +179,7 @@ class AppleFinder(GridGame):
         for x in range(self.MAP_WIDTH - 1):
             for y in range(self.MAP_HEIGHT - 1):
                 if self.map[(x, y)] == self.WATER:
-                    print(f"Found water at {x},{y} (max {self.MAP_WIDTH - 1},{self.MAP_HEIGHT - 1})...")
+                    debug(ldebug, f"Found water at {x},{y} (max {self.MAP_WIDTH - 1},{self.MAP_HEIGHT - 1})...")
                     # add 1 to wetness in 3x3 square
                     for i in range(-1, 2):
                         for j in range(-1, 2):
@@ -180,80 +187,77 @@ class AppleFinder(GridGame):
                             # get candidate coordinates
                             wet_x = x + i
                             wet_y = y + j
-                            print(f"Raw new wet location is {wet_x},{wet_y}...")
+                            debug(ldebug, f"Raw new wet location is {wet_x},{wet_y}...")
 
                             # wrap if candidate < 0
                             if wet_x < 0:
-                                print(f"x value underflow, was {wet_x}, now ", end='')
+                                debug(ldebug, f"x value underflow, was {wet_x}, now ", '')
                                 wet_x = (self.MAP_WIDTH) + i
-                                print(wet_x)
+                                debug(ldebug, wet_x)
                             if wet_y < 0:
-                                print(f"y value underflow, was {wet_y}, now ", end='')
+                                debug(ldebug, f"y value underflow, was {wet_y}, now ", '')
                                 wet_y = (self.MAP_HEIGHT) + j
-                                print(wet_y)
+                                debug(ldebug, wet_y)
 
                             # wrap if candidate >= WIDTH/HEIGHT
                             if wet_x > self.MAP_WIDTH - 1:
-                                print(f"x value overflow, was {wet_x}, now ", end='')
+                                debug(ldebug, f"x value overflow, was {wet_x}, now ", end='')
                                 wet_x = wet_x - self.MAP_WIDTH
-                                print(wet_x)
+                                debug(ldebug, wet_x)
                             if wet_y > self.MAP_HEIGHT - 1:
-                                print(f"y value overflow, was {wet_y}, now ", end='')
+                                debug(ldebug, f"y value overflow, was {wet_y}, now ", '')
                                 wet_y = wet_y - self.MAP_HEIGHT
-                                print(wet_y)
+                                debug(ldebug, wet_y)
 
                             # add wetness to adjusted location
-                            print(f"For water @ {x},{y}, adding wetness to adj loc {wet_x},{wet_y}...")
-                            print(f"...was {self.wetmap[wet_x][wet_y]}, now is ", end='')
+                            debug(ldebug, f"For water @ {x},{y}, adding wetness to adj loc {wet_x},{wet_y}...")
+                            debug(ldebug, f"...was {self.wetmap[wet_x][wet_y]}, now is ", '')
                             self.wetmap[wet_x][wet_y] += 1
-                            print(f"{self.wetmap[wet_x][wet_y]}")
+                            debug(ldebug, f"{self.wetmap[wet_x][wet_y]}")
                     self.print_wetmap()
 
-    def carve_river(self):
-        # run a river across the map
-        # the river starts on the left or top side of the screen
-        # does a random-ish walk until it hits another map boundary
-        # if on left, cannot move "west" and prefers "east"
-        # if no top, cannot move "north" and prefers "south"
-
-        starts = ["north", "east"]
-        start = starts[self.random.randint(0,1)]
-        direction = None
-        river_x = 0
-        river_y = 0
-
-        if start == "north":
-            river_x = self.random.randint(0, self.MAP_WIDTH - 1)
-            direction = "south"
-        else:
-            river_y = self.random.randint(0, self.MAP_HEIGHT - 1)
-            direction = "west"
-
-        print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
-
-        self.map[(river_x, river_y)] = self.WATER
-
-        hit_edge = False
-        while not hit_edge:
-            if direction == "south":
-                deck = [(0, 1), (0,1), (-1, 0), (1, 0)]
-            else:
-                deck = [(1, 0), (1,0), (0, -1), (0, 1)]
-
-            self.random.shuffle(deck)
-            river_x += deck[0][0]
-            river_y += deck[0][1]
-
-            if river_x >= self.MAP_WIDTH or river_x < 0:
-                hit_edge = True
-            elif river_y >= self.MAP_HEIGHT or river_y < 0:
-                hit_edge = True
-            else:
-                self.map[(river_x, river_y)] = self.WATER
-
-                # update the terrain map with water values
-                self.wetten(river_x, river_y)
-
+#     def carve_river(self):
+#         # run a river across the map
+#         # the river starts on the left or top side of the screen
+#         # does a random-ish walk until it hits another map boundary
+#         # if on left, cannot move "west" and prefers "east"
+#         # if no top, cannot move "north" and prefers "south"
+# 
+#         starts = ["north", "east"]
+#         start = starts[self.random.randint(0,1)]
+#         direction = None
+#         river_x = 0
+#         river_y = 0
+# 
+#         if start == "north":
+#             river_x = self.random.randint(0, self.MAP_WIDTH - 1)
+#             direction = "south"
+#         else:
+#             river_y = self.random.randint(0, self.MAP_HEIGHT - 1)
+#             direction = "west"
+# 
+#         print("River will go %s, starting from (%d, %d)." % (direction, river_x, river_y))
+# 
+#         self.map[(river_x, river_y)] = self.WATER
+# 
+#         hit_edge = False
+#         while not hit_edge:
+#             if direction == "south":
+#                 deck = [(0, 1), (0,1), (-1, 0), (1, 0)]
+#             else:
+#                 deck = [(1, 0), (1,0), (0, -1), (0, 1)]
+# 
+#             self.random.shuffle(deck)
+#             river_x += deck[0][0]
+#             river_y += deck[0][1]
+# 
+#             if river_x >= self.MAP_WIDTH or river_x < 0:
+#                 hit_edge = True
+#             elif river_y >= self.MAP_HEIGHT or river_y < 0:
+#                 hit_edge = True
+#             else:
+#                 self.map[(river_x, river_y)] = self.WATER
+# 
 
     def carve_river(self):
         # run a river across the map
@@ -339,8 +343,6 @@ class AppleFinder(GridGame):
         self.update_vars_for_player()
 
     def water_check(self, location):
-
-        return # FIXME
 
         # if this hole is touching water, change it to water
         # then, recursively check all non-water neighbors
@@ -451,7 +453,8 @@ class AppleFinder(GridGame):
             self.underneath_robot = self.HOLE
 
             # check hole -- and any adjacent holes -- for water
-            self.water_check(self.player_pos) # FIXME
+            self.water_check(self.player_pos)
+            self.update_wetmap()
 
             # fix up map in case hole was filled with water
             self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
