@@ -44,6 +44,10 @@ class AppleFinder(GridGame):
     EMPTY = GROUND
     APPLE = chr(15)
     APPLE = 'O'
+    G1 = '.'
+    G2 = ','
+    G3 = ';'
+    G4 = ':'
     BASE = chr(233)
 
     def __init__(self, random):
@@ -66,6 +70,31 @@ class AppleFinder(GridGame):
         self.panels = [self.msg_panel, self.status_panel]
         self.msg_panel.add("Welcome to " + self.GAME_TITLE + "!!!")
         self.msg_panel.add("Try to grow plants and collect seeds!")
+        self.living_cells = [] # will hold a list of locations of living things
+        self.terrain = [[{'water':0}]*self.MAP_WIDTH]*self.MAP_HEIGHT
+        
+        # set up wetness map
+        # water will add this amount of moisture to neighboring cells
+        self.wetness = 5
+        wet_dim = (self.wetness * 2) - 1
+
+        self.wetmap = [[0 for x in range(wet_dim)] for y in range(wet_dim)]
+        offset = 0
+
+        for wet in range(1, self.wetness + 1):
+            for x in range(offset, wet_dim):
+                for y in range(offset, wet_dim):
+                    self.wetmap[x][y] = wet
+
+            print("offset: %d wet_dim: %d wet: %d" % (offset, wet_dim, wet))
+            
+            for i in range(len(self.wetmap)):
+                print("%d : %s" % (i, str(self.wetmap[i])))
+            print()
+        
+            offset += 1
+            wet_dim -= 1
+
 
     def init_board(self):
         self.map = MapPanel(0, 0, self.MAP_WIDTH, self.MAP_HEIGHT, self.EMPTY,
@@ -126,6 +155,26 @@ class AppleFinder(GridGame):
     def place_holes(self, count):
         self.place_objects(self.HOLE, count)
 
+#    def wetten(self, x, y):
+#        # add water values to terrain map
+#        # water values in 9x9 square around (x,y) like so:
+#        #
+#        #  111111111
+#        #  122222221
+#        #  123333321
+#        #  123444321
+#        #  123454321
+#        #  123444321
+#        #  123333321
+#        #  122222221
+#        #  111111111
+#
+#        wetness = 5 # water is this wet; defines square size
+#
+#        for this_x in range(x - wetness, x + wetness + 1):
+#            for this_y in range(y - wetness, y + wetness + 1):
+#
+
     def carve_river(self):
         # run a river across the map
         # the river starts on the left or top side of the screen
@@ -167,6 +216,9 @@ class AppleFinder(GridGame):
                 hit_edge = True
             else:
                 self.map[(river_x, river_y)] = self.WATER
+
+                # update the terrain map with water values
+                self.wetten(river_x, river_y)
 
 
     def carve_river(self):
