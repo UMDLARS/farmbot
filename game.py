@@ -73,27 +73,24 @@ class AppleFinder(GridGame):
         self.living_cells = [] # will hold a list of locations of living things
         self.terrain = [[{'water':0}]*self.MAP_WIDTH]*self.MAP_HEIGHT
         
-        # set up wetness map
-        # water will add this amount of moisture to neighboring cells
-        self.wetness = 5
-        wet_dim = (self.wetness * 2) - 1
+        # create empty wetmap (all zeros)
+        self.wetmap = []
+        for x in range(self.MAP_WIDTH):
+            print(f"init wetmap column {x}...")
+            row = [0] * self.MAP_HEIGHT # need to make a new one each time or its reffed
+            self.wetmap.append(row)
+        self.print_wetmap()
 
-        self.wetmap = [[0 for x in range(wet_dim)] for y in range(wet_dim)]
-        offset = 0
+    def print_wetmap(self):
+        print("printing wetmap:")
+        print("[")
+        for y in range(self.MAP_HEIGHT):
+            print("[ ", end='')
+            for x in range(self.MAP_WIDTH):
+                print(f"{self.wetmap[x][y]} ", end='')
+            print("]")
+        print("]")
 
-        for wet in range(1, self.wetness + 1):
-            for x in range(offset, wet_dim):
-                for y in range(offset, wet_dim):
-                    self.wetmap[x][y] = wet
-
-            print("offset: %d wet_dim: %d wet: %d" % (offset, wet_dim, wet))
-            
-            for i in range(len(self.wetmap)):
-                print("%d : %s" % (i, str(self.wetmap[i])))
-            print()
-        
-            offset += 1
-            wet_dim -= 1
 
 
     def init_board(self):
@@ -105,15 +102,21 @@ class AppleFinder(GridGame):
         self.place_rocks(10)
         self.place_holes(self.NUM_OF_HOLES_START)
 
+        self.place_apples(self.NUM_OF_APPLES)
+        
+        # place water
+        self.place_ponds(self.MAX_POND_SIZE, self.MAX_PONDS)
+        self.carve_river()
+
         # check all holes for water adjacency
         for x in range(self.MAP_WIDTH - 1):
             for y in range(self.MAP_HEIGHT - 1):
                 if self.map[(x, y)] == self.HOLE:
                     self.water_check((x,y))
-
-        self.place_apples(self.NUM_OF_APPLES)
-        self.place_ponds(self.MAX_POND_SIZE, self.MAX_PONDS)
-        self.carve_river()
+    
+        # udpate initial wetmap
+        print("Updating wetmap for the first time...")
+        self.update_wetmap()
         
         # place robot and base randomly
         # robot and base cannot start in water
@@ -155,25 +158,56 @@ class AppleFinder(GridGame):
     def place_holes(self, count):
         self.place_objects(self.HOLE, count)
 
-#    def wetten(self, x, y):
-#        # add water values to terrain map
-#        # water values in 9x9 square around (x,y) like so:
-#        #
-#        #  111111111
-#        #  122222221
-#        #  123333321
-#        #  123444321
-#        #  123454321
-#        #  123444321
-#        #  123333321
-#        #  122222221
-#        #  111111111
-#
-#        wetness = 5 # water is this wet; defines square size
-#
-#        for this_x in range(x - wetness, x + wetness + 1):
-#            for this_y in range(y - wetness, y + wetness + 1):
-#
+    def update_wetmap(self):
+        # iterate over map
+        # for every water cell, add 1 wetness to surrounding cells, e.g.
+        #
+        # 111
+        # 1~1
+        # 111
+        #
+        # wetness is cumulative
+
+        print("Updating wetmap...")
+        for x in range(self.MAP_WIDTH - 1):
+            for y in range(self.MAP_HEIGHT - 1):
+                if self.map[(x, y)] == self.WATER:
+                    print(f"Found water at {x},{y} (max {self.MAP_WIDTH - 1},{self.MAP_HEIGHT - 1})...")
+                    # add 1 to wetness in 3x3 square
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+
+                            # get candidate coordinates
+                            wet_x = x + i
+                            wet_y = y + j
+                            print(f"Raw new wet location is {wet_x},{wet_y}...")
+
+                            # wrap if candidate < 0
+                            if wet_x < 0:
+                                print(f"x value underflow, was {wet_x}, now ", end='')
+                                wet_x = (self.MAP_WIDTH) + i
+                                print(wet_x)
+                            if wet_y < 0:
+                                print(f"y value underflow, was {wet_y}, now ", end='')
+                                wet_y = (self.MAP_HEIGHT) + j
+                                print(wet_y)
+
+                            # wrap if candidate >= WIDTH/HEIGHT
+                            if wet_x > self.MAP_WIDTH - 1:
+                                print(f"x value overflow, was {wet_x}, now ", end='')
+                                wet_x = wet_x - self.MAP_WIDTH
+                                print(wet_x)
+                            if wet_y > self.MAP_HEIGHT - 1:
+                                print(f"y value overflow, was {wet_y}, now ", end='')
+                                wet_y = wet_y - self.MAP_HEIGHT
+                                print(wet_y)
+
+                            # add wetness to adjusted location
+                            print(f"For water @ {x},{y}, adding wetness to adj loc {wet_x},{wet_y}...")
+                            print(f"...was {self.wetmap[wet_x][wet_y]}, now is ", end='')
+                            self.wetmap[wet_x][wet_y] += 1
+                            print(f"{self.wetmap[wet_x][wet_y]}")
+                    self.print_wetmap()
 
     def carve_river(self):
         # run a river across the map
@@ -306,6 +340,8 @@ class AppleFinder(GridGame):
 
     def water_check(self, location):
 
+        return # FIXME
+
         # if this hole is touching water, change it to water
         # then, recursively check all non-water neighbors
 
@@ -415,7 +451,7 @@ class AppleFinder(GridGame):
             self.underneath_robot = self.HOLE
 
             # check hole -- and any adjacent holes -- for water
-            self.water_check(self.player_pos)
+            self.water_check(self.player_pos) # FIXME
 
             # fix up map in case hole was filled with water
             self.map[(self.player_pos[0], self.player_pos[1])] = self.PLAYER
